@@ -12,4 +12,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: autoreconf
-      run: ls -hal
+      run: autoreconf -vfi
