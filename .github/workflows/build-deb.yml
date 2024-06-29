@@ -60,6 +60,7 @@ jobs:
         ./configure
         make
         debuild -us -uc -b
+        ls -hal
 
     - name: Archive the package
       uses: actions/upload-artifact@v3
