@@ -9,13 +9,60 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+
     steps:
-    - uses: actions/checkout@v4
-    - name: install-build-tools
-      run: sudo apt-get -y install autoconf automake autopoint libtool g++ make
-    - name: autoreconf
-      run: autoreconf -vfi
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y devscripts debhelper autotools-dev automake libtool
+
+    - name: Generate Debian packaging files
+      run: |
+        mkdir -p debian
+        cat <<EOF > debian/control
+        Source: hunspell
+        Section: text
+        Priority: optional
+        Maintainer: NonRootUser <notarootuser@example.com>
+        Build-Depends: debhelper (>= 9), autotools-dev, automake, libtool
+        Standards-Version: 3.9.6
+        Homepage: https://github.com/hunspell/hunspell
+
+        Package: hunspell
+        Architecture: amd64
+        Depends: \${shlibs:Depends}, \${misc:Depends}
+        Description: Hunspell spell checker
+         Hunspell is a spell checker and morphological analyzer library and program.
+        EOF
+
+        cat <<EOF > debian/rules
+        #!/usr/bin/make -f
+
+        %:
+            dh \$@
+        EOF
+        chmod +x debian/rules
+
+        cat <<EOF > debian/changelog
+        hunspell (1.7.2-1) unstable; urgency=low
+
+          * Initial release targeting Hunspell 1.7.2 with additional packages.
+
+         -- Your Name <youremail@example.com>  $(date -R)
+        EOF
+
+        echo '9' > debian/compat
+
+    - name: Build the package
+      run: |
+        ./autogen.sh
+        ./configure
+        make
+        debuild -us -uc
+
+    - name: Archive the package
+      uses: actions/upload-artifact@v3
+      with:
+        name: hunspell-deb
+        path: ../*.deb
