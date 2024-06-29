@@ -59,7 +59,7 @@ jobs:
         autoreconf -vfi
         ./configure
         make
-        debuild -us -uc
+        debuild -us -uc -b
 
     - name: Archive the package
       uses: actions/upload-artifact@v3
